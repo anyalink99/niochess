@@ -143,7 +143,7 @@ export function checkEnd() {
   const b = S.pieces.some(p => p.color === 'black' && p.type === 'king');
   if (w && b) return;
   S.result = !w && !b ? 'draw' : w ? 'white' : 'black';
-  S.banner = S.result;
+  S.overReason = 'king';
 }
 
 export function setupBoard() {

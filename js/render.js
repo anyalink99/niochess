@@ -6,7 +6,7 @@ const grid = document.getElementById('grid');
 const layer = document.getElementById('layer');
 const frame = document.querySelector('.board-frame');
 const els = new Map();
-let shownBanner;
+let shownKey;
 
 export function recalc() {
   S.SQ = frame.getBoundingClientRect().width / N;
@@ -27,17 +27,34 @@ export function buildCells() {
   }
 }
 
-function renderBanner() {
-  if (S.banner === shownBanner) return;
-  shownBanner = S.banner;
+function overlayText() {
+  if (S.result) {
+    if (S.result === 'draw') return [T.resDraw, T.subKing];
+    const net = S.mode === 'host' || S.mode === 'guest';
+    if (net) {
+      const win = S.result === S.myColor;
+      const sub = S.overReason === 'surrender' ? (win ? T.subSurrOpp : T.subSurrSelf) : T.subKing;
+      return [win ? T.resWin : T.resLose, sub];
+    }
+    const title = S.result === 'white' ? T.resWhite : T.resBlack;
+    return [title, S.overReason === 'surrender' ? T.subSurr : T.subKing];
+  }
+  if (S.banner) return T.banner[S.banner];
+  return null;
+}
+
+function renderOverlay() {
+  const key = (S.result || '') + '|' + (S.overReason || '') + '|' + (S.banner || '') + '|' + S.myColor + '|' + S.mode;
+  if (key === shownKey) return;
+  shownKey = key;
   const el = document.getElementById('banner');
-  if (!S.banner) {
+  const txt = overlayText();
+  if (!txt) {
     el.classList.remove('show');
     return;
   }
-  const [title, sub] = T.banner[S.banner] || ['', ''];
-  document.getElementById('bTitle').textContent = title;
-  document.getElementById('bSub').textContent = sub;
+  document.getElementById('bTitle').textContent = txt[0];
+  document.getElementById('bSub').textContent = txt[1];
   el.classList.add('show');
 }
 
@@ -57,6 +74,7 @@ export function render(now) {
     const isTarget = targets.has(key);
     cell.classList.toggle('tgt', isTarget);
     cell.classList.toggle('cap', isTarget && m.has(key));
+    cell.classList.toggle('over', !!S.drag && isTarget && S.dragTo === key);
   }
 
   const seen = new Set();
@@ -100,5 +118,5 @@ export function render(now) {
   document.getElementById('cntW').textContent = S.pieces.filter(p => p.color === 'white').length;
   document.getElementById('cntB').textContent = S.pieces.filter(p => p.color === 'black').length;
   document.getElementById('cntMove').textContent = S.pieces.filter(p => p.state === 'moving').length;
-  renderBanner();
+  renderOverlay();
 }

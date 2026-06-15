@@ -1,4 +1,4 @@
-import { S, AI } from './state.js';
+import { S, AI, isPlaying } from './state.js';
 import { occMap, idleAt, legalMoves, startMove, resolveArrivals } from './engine.js';
 import { aiTick } from './ai.js';
 import { connect, broadcast, leaveNet } from './net.js';
@@ -66,7 +66,7 @@ function doMove(piece, f, r) {
 }
 
 function onPointerDown(e) {
-  if (S.result || !S.started) return;
+  if (!isPlaying()) return;
   e.preventDefault();
   const { f, r } = pointerSquare(e.clientX, e.clientY);
   const m = occMap();
@@ -84,6 +84,7 @@ function onPointerDown(e) {
   if (here && canControl(here)) {
     S.selectedId = here.id;
     drag = { id: here.id, moved: false };
+    S.dragTo = f + ',' + r;
     setDragPos(e.clientX, e.clientY);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
@@ -96,6 +97,8 @@ function onPointerDown(e) {
 function onPointerMove(e) {
   if (!drag) return;
   drag.moved = true;
+  const { f, r } = pointerSquare(e.clientX, e.clientY);
+  S.dragTo = f + ',' + r;
   setDragPos(e.clientX, e.clientY);
 }
 
@@ -106,6 +109,7 @@ function onPointerUp(e) {
   const d = drag;
   drag = null;
   S.drag = null;
+  S.dragTo = null;
   if (!d || !d.moved) return;
   const piece = S.pieces.find(p => p.id === d.id && p.state === 'idle');
   if (!piece) return;
@@ -163,20 +167,27 @@ function bindAiPanel() {
 }
 
 function syncPanel() {
-  const playing = S.started && !S.banner;
-  $('settings').classList.toggle('hidden', playing);
-  $('surrenderBtn').classList.toggle('hidden', !playing);
-  $('netBox').classList.toggle('hidden', !S.netTab);
-  $('aiSwitch').classList.toggle('hidden', S.netTab);
-  $('aiPanel').classList.toggle('hidden', S.netTab);
+  const playing = isPlaying();
+  $('settings').classList.toggle('collapsed', playing);
+  $('surrenderBtn').classList.toggle('collapsed', !playing);
+  $('netBox').classList.toggle('collapsed', !S.netTab);
+  $('aiGroup').classList.toggle('collapsed', S.netTab);
   $('tabNet').classList.toggle('is-on', S.netTab);
   $('tabLocal').classList.toggle('is-on', !S.netTab);
 }
 
 function surrender() {
-  leaveNet();
-  S.mode = 'local';
-  showStart();
+  if (!isPlaying()) return;
+  S.overReason = 'surrender';
+  if (S.mode === 'host') {
+    S.result = S.myColor === 'white' ? 'black' : 'white';
+    broadcast(performance.now());
+  } else if (S.mode === 'guest') {
+    S.net.sendSurrender(1);
+    S.result = S.myColor === 'white' ? 'black' : 'white';
+  } else {
+    S.result = S.myColor === 'white' ? 'black' : 'white';
+  }
 }
 
 function closeDrawer() {
@@ -214,8 +225,9 @@ function wireControls() {
   $('resetBtn').addEventListener('click', () => { if (S.mode !== 'guest') startGame(); });
   $('surrenderBtn').addEventListener('click', surrender);
   $('bBtn').addEventListener('click', () => {
-    if (S.mode === 'guest') S.banner = null;
-    else startGame();
+    if (S.banner === 'left') { leaveNet(); selectNet(); return; }
+    if (S.result && S.mode === 'guest') return;
+    startGame();
   });
   $('tabLocal').addEventListener('click', selectLocal);
   $('tabNet').addEventListener('click', selectNet);

@@ -1,8 +1,8 @@
-import { S, AI, rng } from './state.js';
+import { S, AI, rng, isPlaying } from './state.js';
 import { occMap, legalMoves, startMove } from './engine.js';
 
 export function aiTick(now) {
-  if (!S.started || !S.aiOn || S.result) return;
+  if (!isPlaying() || !S.aiOn) return;
 
   const m = occMap();
   const king = S.pieces.find(p => p.color === 'black' && p.type === 'king' && p.state === 'idle');

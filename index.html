@@ -33,13 +33,13 @@
     </div>
 
     <div class="panel" id="panel">
-      <div id="settings">
+      <div id="settings" class="collapsible">
         <div class="seg">
           <button class="seg-opt is-on" id="tabNet" data-i18n="tabNet">Network</button>
           <button class="seg-opt" id="tabLocal" data-i18n="tabLocal">Single</button>
         </div>
 
-        <div id="netBox">
+        <div id="netBox" class="collapsible">
           <div class="fld">
             <span><span data-i18n="roomCode">Room code</span> <span style="color:var(--accent)" data-i18n="roomShared">shared with a friend</span></span>
             <div class="codeRow">
@@ -61,6 +61,7 @@
           <input type="range" class="k-range" id="flight" min="1" max="16" step="1" value="16">
         </div>
 
+        <div id="aiGroup" class="collapsible collapsed">
         <div class="k-card row aiSwitchRow" id="aiSwitch">
           <span data-i18n="aiOn">AI plays Black</span>
           <label class="k-switch"><input type="checkbox" id="ai" checked><span class="k-switch__track"></span></label>
@@ -91,6 +92,7 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
 
       <div class="k-card">
@@ -100,7 +102,7 @@
       </div>
 
       <button class="k-btn k-btn--ghost k-btn--block" id="resetBtn" data-i18n="newGame">New game</button>
-      <button class="k-btn k-btn--ghost k-btn--block hidden" id="surrenderBtn" data-i18n="surrender">Surrender</button>
+      <button class="k-btn k-btn--ghost k-btn--block collapsible collapsed" id="surrenderBtn" data-i18n="surrender">Surrender</button>
 
       <div class="k-accordion" id="rulesAcc" data-single>
         <section class="k-accordion__item">

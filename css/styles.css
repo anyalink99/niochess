@@ -136,6 +136,7 @@ h1 em { font-style: italic; color: var(--accent); }
   transform: translate(-50%, -50%);
   background: rgba(15, 20, 28, .34);
   border-radius: 50%;
+  transition: background .12s ease, border-color .12s ease, width .12s ease, height .12s ease;
 }
 
 .cell.tgt.cap::before {
@@ -145,6 +146,11 @@ h1 em { font-style: italic; color: var(--accent); }
   border: max(3px, calc(var(--sq) * .055)) solid color-mix(in srgb, var(--bad) 85%, transparent);
   border-radius: 50%;
 }
+
+.cell.tgt:hover::before { background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.cell.tgt.cap:hover::before { background: transparent; border-color: var(--accent); }
+.cell.tgt.over::before { background: color-mix(in srgb, var(--accent) 75%, transparent); }
+.cell.tgt.cap.over::before { background: transparent; border-color: var(--accent); }
 
 .pieces { position: absolute; inset: 0; pointer-events: none; }
 
@@ -186,7 +192,7 @@ h1 em { font-style: italic; color: var(--accent); }
 .banner {
   position: absolute;
   inset: 0;
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -195,13 +201,26 @@ h1 em { font-style: italic; color: var(--accent); }
   backdrop-filter: blur(3px);
   z-index: 6;
   border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s ease, visibility .25s ease;
 }
 
-.banner.show { display: flex; }
+.banner.show { opacity: 1; visibility: visible; }
 .banner h3 { margin: 0 0 6px; font-family: "Fraunces", serif; font-size: clamp(24px, 4vw, 34px); }
 .banner p { margin: 0 0 18px; color: var(--muted); }
 
 .panel { width: 300px; display: flex; flex-direction: column; gap: 14px; }
+
+#settings { display: flex; flex-direction: column; gap: 14px; }
+#aiGroup { display: flex; flex-direction: column; gap: 14px; }
+
+.collapsible { overflow: hidden; transition: max-height .3s var(--k-ease, ease), opacity .22s ease; }
+#settings.collapsible { max-height: 900px; }
+#netBox.collapsible { max-height: 280px; }
+#aiGroup.collapsible { max-height: 480px; }
+#surrenderBtn.collapsible { max-height: 60px; }
+.collapsed { max-height: 0 !important; opacity: 0; }
 
 .seg {
   width: 100%;

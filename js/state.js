@@ -35,7 +35,9 @@ export const S = {
   myColor: 'white',
   flip: false,
   coordWhite: null,
+  overReason: null,
   drag: null,
+  dragTo: null,
   travel: 10000,
   flightLimit: 16,
   aiOn: true,
@@ -53,3 +55,5 @@ export const rng = (a, b) => {
   const hi = Math.max(a, b);
   return lo + Math.random() * (hi - lo);
 };
+
+export const isPlaying = () => S.started && !S.result && !S.banner;

@@ -15,6 +15,7 @@ function setStatus(msg, cls) {
 export function snapshot(now) {
   return {
     over: S.result,
+    wy: S.overReason,
     cw: S.coordWhite,
     ps: S.pieces.map(p =>
       p.state === 'idle'
@@ -48,7 +49,7 @@ function guestApply(d) {
   S.myColor = d.cw ? 'black' : 'white';
   S.flip = S.myColor === 'black';
   S.result = d.over;
-  S.banner = d.over || null;
+  S.overReason = d.wy || null;
 }
 
 function hostHandleMove(d) {
@@ -58,6 +59,12 @@ function hostHandleMove(d) {
   if (!p) return;
   const m = occMap();
   if (legalMoves(p, m).some(([F, R]) => F === d.f && R === d.r)) startMove(p, d.f, d.r);
+}
+
+function hostHandleSurrender() {
+  if (S.mode !== 'host' || S.result) return;
+  S.overReason = 'surrender';
+  S.result = S.myColor;
 }
 
 function peerJoin(pid) {
@@ -74,6 +81,7 @@ function peerJoin(pid) {
   } else {
     S.pieces = [];
     S.result = null;
+    S.overReason = null;
     S.banner = null;
     S.started = true;
     setStatus(T.netConnected, 'ok');
@@ -120,6 +128,7 @@ export async function connect(code) {
     const room = joinRoom({ appId: APP_ID }, code);
     const moveAction = room.makeAction('mv');
     const stateAction = room.makeAction('st');
+    const surrAction = room.makeAction('sr');
 
     const safeSend = action => d => {
       try {
@@ -136,10 +145,12 @@ export async function connect(code) {
       peerId: null,
       sendMove: safeSend(moveAction),
       sendState: safeSend(stateAction),
+      sendSurrender: safeSend(surrAction),
     };
 
     moveAction.onMessage = d => hostHandleMove(d);
     stateAction.onMessage = d => guestApply(d);
+    surrAction.onMessage = () => hostHandleSurrender();
     room.onPeerJoin = pid => peerJoin(pid);
     room.onPeerLeave = () => peerLeave();
 
