@@ -2,14 +2,55 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>niochess</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>niochess — real-time chess with no turns</title>
+<meta name="description" content="Real-time chess with no turns. Pieces fly to their target over a fixed time; the capture happens on arrival. Play vs AI or a friend over P2P — free, no install.">
+<meta name="author" content="niochess">
+<meta name="theme-color" content="#1a1f29">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="niochess">
+<meta property="og:type" content="website">
+<meta property="og:title" content="niochess — real-time chess with no turns">
+<meta property="og:description" content="Real-time chess with no turns. Pieces fly to their target; the capture happens on arrival. Play vs AI or a friend over P2P.">
+<meta property="og:url" content="https://anyalink99.github.io/niochess/">
+<meta property="og:site_name" content="niochess">
+<meta property="og:image" content="https://anyalink99.github.io/niochess/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="niochess — real-time chess with no turns">
+<meta name="twitter:description" content="Real-time chess with no turns. Pieces fly to their target; the capture happens on arrival. Play vs AI or a friend over P2P.">
+<meta name="twitter:image" content="https://anyalink99.github.io/niochess/og-image.png">
+<link rel="canonical" href="https://anyalink99.github.io/niochess/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="mask-icon" href="favicon.svg" color="#ffcc4d">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/css/tokens.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/css/components.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "niochess",
+  "url": "https://anyalink99.github.io/niochess/",
+  "description": "Real-time chess with no turns. Pieces fly to their target over a fixed time; the capture happens on arrival. Play vs AI or a friend over P2P.",
+  "applicationCategory": "Game",
+  "operatingSystem": "Web",
+  "inLanguage": "en",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 </head>
 <body>
   <button class="burger" id="burger" aria-label="menu">☰</button>
@@ -116,5 +157,10 @@
   <script src="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/js/kit.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/js/accordion.js"></script>
   <script type="module" src="js/ui.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+    }
+  </script>
 </body>
 </html>

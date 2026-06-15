@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://anyalink99.github.io/niochess/sitemap.xml
