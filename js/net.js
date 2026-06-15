@@ -1,6 +1,7 @@
 import { S, clamp } from './state.js';
 import { occMap, legalMoves, startMove } from './engine.js';
 import { startGame } from './game.js';
+import { T } from './i18n.js';
 
 const TRYSTERO = 'https://esm.sh/trystero@0.25.2/nostr';
 const APP_ID = 'niochess-v1';
@@ -14,6 +15,7 @@ function setStatus(msg, cls) {
 export function snapshot(now) {
   return {
     over: S.result,
+    cw: S.coordWhite,
     ps: S.pieces.map(p =>
       p.state === 'idle'
         ? { i: p.id, c: p.color, k: p.type, s: 0, f: p.file, r: p.rank }
@@ -42,13 +44,17 @@ function guestApply(d) {
           dur: o.d, start: now - o.pr * o.d,
         }
   );
+  S.coordWhite = d.cw;
+  S.myColor = d.cw ? 'black' : 'white';
+  S.flip = S.myColor === 'black';
   S.result = d.over;
   S.banner = d.over || null;
 }
 
 function hostHandleMove(d) {
   if (S.mode !== 'host' || S.result) return;
-  const p = S.pieces.find(x => x.id === d.id && x.state === 'idle' && x.color === 'black');
+  const guestColor = S.myColor === 'white' ? 'black' : 'white';
+  const p = S.pieces.find(x => x.id === d.id && x.state === 'idle' && x.color === guestColor);
   if (!p) return;
   const m = occMap();
   if (legalMoves(p, m).some(([F, R]) => F === d.f && R === d.r)) startMove(p, d.f, d.r);
@@ -63,21 +69,20 @@ function peerJoin(pid) {
 
   if (host) {
     startGame();
+    const msg = S.myColor === 'white' ? T.netConnectedWhite : T.netConnectedBlack;
+    setStatus(msg, 'ok');
   } else {
     S.pieces = [];
     S.result = null;
     S.banner = null;
     S.started = true;
+    setStatus(T.netConnected, 'ok');
   }
-
-  setStatus('Соединено. Ты играешь ' + (host ? 'белыми (хост).' : 'чёрными.'), 'ok');
-  document.getElementById('aiSwitch').classList.add('hidden');
-  document.getElementById('aiPanel').classList.add('hidden');
 }
 
 function peerLeave() {
   S.banner = 'left';
-  setStatus('Соперник отключился.', 'err');
+  setStatus(T.netLeft, 'err');
 }
 
 export function leaveNet() {
@@ -92,19 +97,20 @@ export function leaveNet() {
 
 export async function connect(code) {
   if (!code) {
-    setStatus('Введите код комнаты.', 'err');
+    setStatus(T.netNoCode, 'err');
     return;
   }
 
   const btn = document.getElementById('connectBtn');
   btn.disabled = true;
-  setStatus('Загрузка P2P-модуля…');
+  setStatus(T.netLoading);
+  S.coordWhite = null;
 
   let mod;
   try {
     mod = await import(TRYSTERO);
   } catch (e) {
-    setStatus('Не удалось загрузить P2P. Открой страницу через локальный сервер.', 'err');
+    setStatus(T.netLoadFail, 'err');
     btn.disabled = false;
     return;
   }
@@ -137,9 +143,9 @@ export async function connect(code) {
     room.onPeerJoin = pid => peerJoin(pid);
     room.onPeerLeave = () => peerLeave();
 
-    setStatus('Ожидание соперника… код: ' + code);
+    setStatus(T.netWaiting(code));
   } catch (e) {
-    setStatus('Ошибка: ' + e.message, 'err');
+    setStatus(T.netError(e.message), 'err');
     btn.disabled = false;
   }
 }

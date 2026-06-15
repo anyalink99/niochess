@@ -1,5 +1,6 @@
 import { S, N, GLYPH, FILES, lerp, clamp } from './state.js';
 import { occMap, legalMoves } from './engine.js';
+import { T } from './i18n.js';
 
 const grid = document.getElementById('grid');
 const layer = document.getElementById('layer');
@@ -7,19 +8,11 @@ const frame = document.querySelector('.board-frame');
 const els = new Map();
 let shownBanner;
 
-const BANNER_TEXT = {
-  start: ['niochess', 'Нажми «Новая партия», чтобы начать.'],
-  white: ['Белые победили', 'Чёрный король съеден.'],
-  black: ['Чёрные победили', 'Белый король съеден.'],
-  draw: ['Ничья', 'Оба короля пали разом.'],
-  left: ['Соперник вышел', 'Соединение разорвано.'],
-};
-
 export function recalc() {
   S.SQ = frame.getBoundingClientRect().width / N;
 }
 
-export function buildCells(onCell) {
+export function buildCells() {
   grid.innerHTML = '';
   for (let r = 0; r < N; r++) {
     for (let f = 0; f < N; f++) {
@@ -29,7 +22,6 @@ export function buildCells(onCell) {
       cell.dataset.r = r;
       if (r === 7) cell.innerHTML += `<span class="lbl file">${FILES[f]}</span>`;
       if (f === 0) cell.innerHTML += `<span class="lbl rank">${8 - r}</span>`;
-      cell.addEventListener('click', () => onCell(f, r));
       grid.appendChild(cell);
     }
   }
@@ -43,13 +35,14 @@ function renderBanner() {
     el.classList.remove('show');
     return;
   }
-  const [title, sub] = BANNER_TEXT[S.banner] || ['', ''];
+  const [title, sub] = T.banner[S.banner] || ['', ''];
   document.getElementById('bTitle').textContent = title;
   document.getElementById('bSub').textContent = sub;
   el.classList.add('show');
 }
 
 export function render(now) {
+  frame.classList.toggle('flip', !!S.flip);
   const sel = S.selectedId != null
     ? S.pieces.find(p => p.id === S.selectedId && p.state === 'idle')
     : null;
@@ -76,12 +69,16 @@ export function render(now) {
       layer.appendChild(el);
       els.set(p.id, el);
     }
-    el.className = 'piece ' + p.color + (p.state === 'moving' ? ' moving' : '');
+    const dragging = S.drag && S.drag.id === p.id;
+    el.className = 'piece ' + p.color + (p.state === 'moving' ? ' moving' : '') + (dragging ? ' drag' : '');
     el.style.setProperty('--glow', p.color === 'white' ? 'var(--glow-w)' : 'var(--glow-b)');
     el.querySelector('.g').textContent = GLYPH[p.type];
 
     let x, y;
-    if (p.state === 'idle') {
+    if (dragging) {
+      x = S.drag.x;
+      y = S.drag.y;
+    } else if (p.state === 'idle') {
       x = p.file * S.SQ;
       y = p.rank * S.SQ;
     } else {

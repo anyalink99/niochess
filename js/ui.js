@@ -4,8 +4,10 @@ import { aiTick } from './ai.js';
 import { connect, broadcast, leaveNet } from './net.js';
 import { startGame, showStart } from './game.js';
 import { render, recalc, buildCells } from './render.js';
+import { T, applyI18n } from './i18n.js';
 
 const $ = id => document.getElementById(id);
+const frame = document.querySelector('.board-frame');
 
 const LS_KEY = 'niochess:settings';
 const PERSIST = ['travel', 'flight', 'aCap', 'aSnipe', 'aReactMin', 'aReactMax', 'aMoveMin', 'aMoveMax'];
@@ -33,30 +35,88 @@ function saveSettings() {
 
 function canControl(p) {
   if (S.mode === 'local') return S.aiOn ? p.color === 'white' : true;
-  if (S.mode === 'host') return p.color === 'white';
-  if (S.mode === 'guest') return p.color === 'black';
-  return false;
+  return p.color === S.myColor;
 }
 
-function onCell(f, r) {
+let drag = null;
+
+function pointerSquare(cx, cy) {
+  const rect = frame.getBoundingClientRect();
+  const sq = rect.width / 8;
+  let col = Math.floor((cx - rect.left) / sq);
+  let row = Math.floor((cy - rect.top) / sq);
+  col = col < 0 ? 0 : col > 7 ? 7 : col;
+  row = row < 0 ? 0 : row > 7 ? 7 : row;
+  return { f: S.flip ? 7 - col : col, r: S.flip ? 7 - row : row };
+}
+
+function setDragPos(cx, cy) {
+  const rect = frame.getBoundingClientRect();
+  const sq = rect.width / 8;
+  const px = cx - rect.left;
+  const py = cy - rect.top;
+  const x = S.flip ? rect.width - px - sq / 2 : px - sq / 2;
+  const y = S.flip ? rect.height - py - sq / 2 : py - sq / 2;
+  S.drag = { id: drag.id, x, y };
+}
+
+function doMove(piece, f, r) {
+  if (S.mode === 'guest') S.net.sendMove({ id: piece.id, f, r });
+  else startMove(piece, f, r);
+}
+
+function onPointerDown(e) {
   if (S.result || !S.started) return;
+  e.preventDefault();
+  const { f, r } = pointerSquare(e.clientX, e.clientY);
   const m = occMap();
   const sel = S.selectedId != null
     ? S.pieces.find(p => p.id === S.selectedId && p.state === 'idle')
     : null;
 
   if (sel && legalMoves(sel, m).some(([F, R]) => F === f && R === r)) {
-    if (S.mode === 'guest') {
-      S.net.sendMove({ id: sel.id, f, r });
-      S.selectedId = null;
-    } else if (startMove(sel, f, r)) {
-      S.selectedId = null;
-    }
+    doMove(sel, f, r);
+    S.selectedId = null;
     return;
   }
 
   const here = idleAt(f, r);
-  S.selectedId = here && canControl(here) ? here.id : null;
+  if (here && canControl(here)) {
+    S.selectedId = here.id;
+    drag = { id: here.id, moved: false };
+    setDragPos(e.clientX, e.clientY);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  } else {
+    S.selectedId = null;
+  }
+}
+
+function onPointerMove(e) {
+  if (!drag) return;
+  drag.moved = true;
+  setDragPos(e.clientX, e.clientY);
+}
+
+function onPointerUp(e) {
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+  const d = drag;
+  drag = null;
+  S.drag = null;
+  if (!d || !d.moved) return;
+  const piece = S.pieces.find(p => p.id === d.id && p.state === 'idle');
+  if (!piece) return;
+  const { f, r } = pointerSquare(e.clientX, e.clientY);
+  const m = occMap();
+  if (legalMoves(piece, m).some(([F, R]) => F === f && R === r)) {
+    doMove(piece, f, r);
+    S.selectedId = null;
+  } else if (!(f === piece.file && r === piece.rank)) {
+    S.selectedId = null;
+  }
 }
 
 function loop(now) {
@@ -68,18 +128,18 @@ function loop(now) {
     if (now - S.lastSnap >= 70) broadcast(now);
   }
   render(now);
+  syncPanel();
   requestAnimationFrame(loop);
 }
 
 function syncTravel() {
   S.travel = +$('travel').value;
-  $('ttLabel').textContent = (S.travel / 1000).toFixed(1) + ' c';
+  $('ttLabel').textContent = (S.travel / 1000).toFixed(1) + ' ' + T.sec;
 }
 
 function syncFlight() {
-  const v = +$('flight').value;
-  S.flightLimit = v;
-  $('flLabel').textContent = String(v);
+  S.flightLimit = +$('flight').value;
+  $('flLabel').textContent = String(S.flightLimit);
 }
 
 function bindAiPanel() {
@@ -91,34 +151,56 @@ function bindAiPanel() {
     AI.reactMin = +$('aReactMin').value * 1000;
     AI.reactMax = +$('aReactMax').value * 1000;
     $('lReact').textContent =
-      (+$('aReactMin').value).toFixed(1) + '–' + (+$('aReactMax').value).toFixed(1) + ' c';
+      (+$('aReactMin').value).toFixed(1) + '–' + (+$('aReactMax').value).toFixed(1) + ' ' + T.sec;
     AI.moveMin = +$('aMoveMin').value * 1000;
     AI.moveMax = +$('aMoveMax').value * 1000;
     $('lMove').textContent =
-      (+$('aMoveMin').value).toFixed(1) + '–' + (+$('aMoveMax').value).toFixed(1) + ' c';
+      (+$('aMoveMin').value).toFixed(1) + '–' + (+$('aMoveMax').value).toFixed(1) + ' ' + T.sec;
   };
   ['aCap', 'aSnipe', 'aReactMin', 'aReactMax', 'aMoveMin', 'aMoveMax']
     .forEach(id => $(id).addEventListener('input', upd));
   upd();
 }
 
+function syncPanel() {
+  const playing = S.started && !S.banner;
+  $('settings').classList.toggle('hidden', playing);
+  $('surrenderBtn').classList.toggle('hidden', !playing);
+  $('netBox').classList.toggle('hidden', !S.netTab);
+  $('aiSwitch').classList.toggle('hidden', S.netTab);
+  $('aiPanel').classList.toggle('hidden', S.netTab);
+  $('tabNet').classList.toggle('is-on', S.netTab);
+  $('tabLocal').classList.toggle('is-on', !S.netTab);
+}
+
+function surrender() {
+  leaveNet();
+  S.mode = 'local';
+  showStart();
+}
+
+function closeDrawer() {
+  $('panel').classList.remove('open');
+  $('scrim').classList.remove('open');
+}
+
+function toggleDrawer() {
+  $('panel').classList.toggle('open');
+  $('scrim').classList.toggle('open');
+}
+
 function selectLocal() {
-  $('tabLocal').classList.add('is-on');
-  $('tabNet').classList.remove('is-on');
-  $('netBox').classList.add('hidden');
-  $('aiSwitch').classList.remove('hidden');
-  $('aiPanel').classList.remove('hidden');
+  S.netTab = false;
   leaveNet();
   S.mode = 'local';
   showStart();
 }
 
 function selectNet() {
-  $('tabNet').classList.add('is-on');
-  $('tabLocal').classList.remove('is-on');
-  $('netBox').classList.remove('hidden');
-  $('aiSwitch').classList.add('hidden');
-  $('aiPanel').classList.add('hidden');
+  S.netTab = true;
+  leaveNet();
+  S.mode = 'local';
+  showStart();
 }
 
 function wireControls() {
@@ -130,12 +212,16 @@ function wireControls() {
   });
   $('connectBtn').addEventListener('click', () => connect($('code').value.trim().toLowerCase()));
   $('resetBtn').addEventListener('click', () => { if (S.mode !== 'guest') startGame(); });
+  $('surrenderBtn').addEventListener('click', surrender);
   $('bBtn').addEventListener('click', () => {
     if (S.mode === 'guest') S.banner = null;
     else startGame();
   });
   $('tabLocal').addEventListener('click', selectLocal);
   $('tabNet').addEventListener('click', selectNet);
+  $('burger').addEventListener('click', toggleDrawer);
+  $('scrim').addEventListener('click', closeDrawer);
+  frame.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('resize', recalc);
 
   PERSIST.forEach(id => $(id).addEventListener('input', saveSettings));
@@ -152,7 +238,8 @@ function initAccordion() {
 }
 
 function init() {
-  buildCells(onCell);
+  applyI18n();
+  buildCells();
   recalc();
   loadSettings();
   S.aiOn = $('ai').checked;
@@ -160,8 +247,7 @@ function init() {
   syncFlight();
   bindAiPanel();
   wireControls();
-  $('tabLocal').classList.add('is-on');
-  $('tabNet').classList.remove('is-on');
+  S.netTab = true;
   showStart();
   initAccordion();
   requestAnimationFrame(loop);
