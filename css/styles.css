@@ -164,10 +164,8 @@ h1 em { font-style: italic; color: var(--accent); }
   justify-content: center;
   font-size: calc(var(--sq) * .74);
   line-height: 1;
-  will-change: transform;
 }
 
-.piece .g { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
 .piece.white .g { color: var(--white-p); text-shadow: 0 0 1px #000, 0 1px 1px #000; }
 .piece.black .g { color: var(--black-p); text-shadow: 0 0 1px #efe2cb, 0 1px 0 #000; }
 .piece.moving { opacity: .95; }
@@ -188,7 +186,15 @@ h1 em { font-style: italic; color: var(--accent); }
 }
 
 .piece.moving .bar { display: block; }
-.piece .bar i { display: block; height: 100%; width: 0; background: var(--glow); border-radius: 3px; }
+.piece .bar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--glow);
+  border-radius: 3px;
+  transform: scaleX(0);
+  transform-origin: left;
+}
 
 .banner {
   position: absolute;
@@ -379,6 +385,8 @@ a { color: var(--accent); }
     border-radius: 0;
     box-shadow: none;
   }
+
+  .piece.moving .g { filter: none; }
 
   .burger {
     display: flex;

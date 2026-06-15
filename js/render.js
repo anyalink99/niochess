@@ -131,8 +131,8 @@ export function render(now) {
       const t = clamp((now - p.start) / p.dur, 0, 1);
       x = lerp(p.fromFile, p.toFile, t) * S.SQ;
       y = lerp(p.fromRank, p.toRank, t) * S.SQ;
-      const w = t * 100 + '%';
-      if (w !== el._bw) { el._bar.style.width = w; el._bw = w; }
+      const sx = 'scaleX(' + t + ')';
+      if (sx !== el._bw) { el._bar.style.transform = sx; el._bw = sx; }
     }
     const tf = `translate(${x}px, ${y}px)`;
     if (tf !== el._tf) { el.style.transform = tf; el._tf = tf; }
