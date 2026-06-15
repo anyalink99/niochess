@@ -47,10 +47,8 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  // P2P module must always hit the network
   if (url.hostname.includes('esm.sh')) return;
 
-  // Own files: network-first (fresh when online, cached fallback offline)
   if (url.origin === self.location.origin) {
     event.respondWith(
       fetch(req)
@@ -60,7 +58,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Immutable CDN assets (niokit, fonts): cache-first
   const cdn =
     url.hostname.includes('jsdelivr.net') ||
     url.hostname.includes('fonts.googleapis.com') ||

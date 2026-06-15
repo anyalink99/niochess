@@ -29,7 +29,6 @@ function saveSettings() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(data));
   } catch (e) {
-    // ignore
   }
 }
 

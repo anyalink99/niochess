@@ -98,7 +98,6 @@ export function leaveNet() {
   try {
     if (S.net.room && S.net.room.leave) S.net.room.leave();
   } catch (e) {
-    // ignore
   }
   S.net = null;
 }
@@ -135,7 +134,6 @@ export async function connect(code) {
         const r = action.send(d);
         if (r && r.catch) r.catch(() => {});
       } catch (e) {
-        // ignore transient send failures
       }
     };
 

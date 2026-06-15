@@ -26,9 +26,24 @@ export function aiTick(now) {
 }
 
 function aiAct(m) {
+  if (clearLanding(m)) return;
   if (snipeKing(m)) return;
   if (Math.random() < AI.snipeBias && snipe(m)) return;
   aiRandomMove(m);
+}
+
+function clearLanding(m) {
+  const incoming = new Set(
+    S.pieces.filter(p => p.color === 'black' && p.state === 'moving').map(p => p.toFile + ',' + p.toRank)
+  );
+  if (!incoming.size) return false;
+  const blocker = S.pieces.find(p =>
+    p.state === 'idle' && p.color === 'black' && incoming.has(p.file + ',' + p.rank));
+  if (!blocker) return false;
+  const moves = legalMoves(blocker, m).filter(([F, R]) => !incoming.has(F + ',' + R));
+  if (!moves.length) return false;
+  const mv = moves[(Math.random() * moves.length) | 0];
+  return startMove(blocker, mv[0], mv[1]);
 }
 
 function reacher(m, f, r) {
