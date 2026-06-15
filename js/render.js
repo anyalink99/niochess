@@ -5,8 +5,18 @@ import { T } from './i18n.js';
 const grid = document.getElementById('grid');
 const layer = document.getElementById('layer');
 const frame = document.querySelector('.board-frame');
+const bannerEl = document.getElementById('banner');
+const bTitle = document.getElementById('bTitle');
+const bSub = document.getElementById('bSub');
+const cntW = document.getElementById('cntW');
+const cntB = document.getElementById('cntB');
+const cntMove = document.getElementById('cntMove');
+
 const els = new Map();
+const EMPTY = new Set();
 let shownKey;
+let lastCounts;
+let lastFlip;
 
 export function recalc() {
   S.SQ = frame.getBoundingClientRect().width / N;
@@ -47,24 +57,27 @@ function renderOverlay() {
   const key = (S.result || '') + '|' + (S.overReason || '') + '|' + (S.banner || '') + '|' + S.myColor + '|' + S.mode;
   if (key === shownKey) return;
   shownKey = key;
-  const el = document.getElementById('banner');
   const txt = overlayText();
   if (!txt) {
-    el.classList.remove('show');
+    bannerEl.classList.remove('show');
     return;
   }
-  document.getElementById('bTitle').textContent = txt[0];
-  document.getElementById('bSub').textContent = txt[1];
-  el.classList.add('show');
+  bTitle.textContent = txt[0];
+  bSub.textContent = txt[1];
+  bannerEl.classList.add('show');
 }
 
 export function render(now) {
-  frame.classList.toggle('flip', !!S.flip);
+  if (lastFlip !== S.flip) {
+    frame.classList.toggle('flip', !!S.flip);
+    lastFlip = S.flip;
+  }
+
   const sel = S.selectedId != null
     ? S.pieces.find(p => p.id === S.selectedId && p.state === 'idle')
     : null;
-  const m = occMap();
-  const targets = new Set((sel ? legalMoves(sel, m) : []).map(t => t[0] + ',' + t[1]));
+  const m = sel ? occMap() : null;
+  const targets = sel ? new Set(legalMoves(sel, m).map(t => t[0] + ',' + t[1])) : EMPTY;
 
   for (const cell of grid.children) {
     const f = +cell.dataset.f;
@@ -73,24 +86,39 @@ export function render(now) {
     cell.classList.toggle('sel', !!sel && sel.file === f && sel.rank === r);
     const isTarget = targets.has(key);
     cell.classList.toggle('tgt', isTarget);
-    cell.classList.toggle('cap', isTarget && m.has(key));
+    cell.classList.toggle('cap', isTarget && !!m && m.has(key));
     cell.classList.toggle('over', !!S.drag && isTarget && S.dragTo === key);
   }
 
+  let nW = 0;
+  let nB = 0;
+  let nMove = 0;
   const seen = new Set();
   for (const p of S.pieces) {
     seen.add(p.id);
+    if (p.color === 'white') nW++; else nB++;
+    if (p.state === 'moving') nMove++;
+
     let el = els.get(p.id);
     if (!el) {
       el = document.createElement('div');
       el.innerHTML = '<span class="g"></span><span class="bar"><i></i></span>';
+      el._g = el.querySelector('.g');
+      el._bar = el.querySelector('.bar i');
+      el._cls = el._glow = el._glyph = el._tf = el._bw = '';
       layer.appendChild(el);
       els.set(p.id, el);
     }
+
     const dragging = S.drag && S.drag.id === p.id;
-    el.className = 'piece ' + p.color + (p.state === 'moving' ? ' moving' : '') + (dragging ? ' drag' : '');
-    el.style.setProperty('--glow', p.color === 'white' ? 'var(--glow-w)' : 'var(--glow-b)');
-    el.querySelector('.g').textContent = GLYPH[p.type];
+    const cls = 'piece ' + p.color + (p.state === 'moving' ? ' moving' : '') + (dragging ? ' drag' : '');
+    if (cls !== el._cls) { el.className = cls; el._cls = cls; }
+
+    const glow = p.color === 'white' ? 'var(--glow-w)' : 'var(--glow-b)';
+    if (glow !== el._glow) { el.style.setProperty('--glow', glow); el._glow = glow; }
+
+    const glyph = GLYPH[p.type];
+    if (glyph !== el._glyph) { el._g.textContent = glyph; el._glyph = glyph; }
 
     let x, y;
     if (dragging) {
@@ -103,9 +131,11 @@ export function render(now) {
       const t = clamp((now - p.start) / p.dur, 0, 1);
       x = lerp(p.fromFile, p.toFile, t) * S.SQ;
       y = lerp(p.fromRank, p.toRank, t) * S.SQ;
-      el.querySelector('.bar i').style.width = t * 100 + '%';
+      const w = t * 100 + '%';
+      if (w !== el._bw) { el._bar.style.width = w; el._bw = w; }
     }
-    el.style.transform = `translate(${x}px, ${y}px)`;
+    const tf = `translate(${x}px, ${y}px)`;
+    if (tf !== el._tf) { el.style.transform = tf; el._tf = tf; }
   }
 
   for (const [id, el] of els) {
@@ -115,8 +145,13 @@ export function render(now) {
     }
   }
 
-  document.getElementById('cntW').textContent = S.pieces.filter(p => p.color === 'white').length;
-  document.getElementById('cntB').textContent = S.pieces.filter(p => p.color === 'black').length;
-  document.getElementById('cntMove').textContent = S.pieces.filter(p => p.state === 'moving').length;
+  const counts = nW + '|' + nB + '|' + nMove;
+  if (counts !== lastCounts) {
+    cntW.textContent = nW;
+    cntB.textContent = nB;
+    cntMove.textContent = nMove;
+    lastCounts = counts;
+  }
+
   renderOverlay();
 }

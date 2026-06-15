@@ -166,8 +166,12 @@ function bindAiPanel() {
   upd();
 }
 
+let lastPanelSig;
 function syncPanel() {
   const playing = isPlaying();
+  const sig = (playing ? 1 : 0) | (S.netTab ? 2 : 0);
+  if (sig === lastPanelSig) return;
+  lastPanelSig = sig;
   $('settings').classList.toggle('collapsed', playing);
   $('surrenderBtn').classList.toggle('collapsed', !playing);
   $('netBox').classList.toggle('collapsed', !S.netTab);
