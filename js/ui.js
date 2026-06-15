@@ -204,6 +204,16 @@ function toggleDrawer() {
   $('scrim').classList.toggle('open');
 }
 
+function updateLayout() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const board = Math.min(0.8 * Math.min(w, h), h - 180);
+  const compact = w < board + 398;
+  document.body.classList.toggle('compact', compact);
+  if (!compact) closeDrawer();
+  recalc();
+}
+
 function selectLocal() {
   S.netTab = false;
   leaveNet();
@@ -238,7 +248,7 @@ function wireControls() {
   $('burger').addEventListener('click', toggleDrawer);
   $('scrim').addEventListener('click', closeDrawer);
   frame.addEventListener('pointerdown', onPointerDown);
-  window.addEventListener('resize', recalc);
+  window.addEventListener('resize', updateLayout);
 
   PERSIST.forEach(id => $(id).addEventListener('input', saveSettings));
   $('ai').addEventListener('change', saveSettings);
@@ -256,7 +266,7 @@ function initAccordion() {
 function init() {
   applyI18n();
   buildCells();
-  recalc();
+  updateLayout();
   loadSettings();
   S.aiOn = $('ai').checked;
   syncTravel();
