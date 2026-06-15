@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>niochess</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/css/tokens.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/css/components.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>nio<em>chess</em></h1>
+  </header>
+
+  <div class="stage">
+    <div class="board-wrap">
+      <div class="board-frame">
+        <div class="grid" id="grid"></div>
+        <div class="pieces" id="layer"></div>
+        <div class="banner" id="banner">
+          <h3 id="bTitle"></h3>
+          <p id="bSub"></p>
+          <button class="k-btn k-btn--primary k-btn--lg" id="bBtn">Новая партия</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="k-segment">
+        <button class="k-segment__opt" id="tabNet">Сетевая</button>
+        <button class="k-segment__opt is-on" id="tabLocal">Одиночная</button>
+      </div>
+
+      <div id="netBox" class="hidden">
+        <div class="fld">
+          <span>Код комнаты <span style="color:var(--accent)">общий с другом</span></span>
+          <div class="codeRow">
+            <input type="text" class="k-field" id="code" placeholder="например: tower" autocomplete="off" spellcheck="false">
+            <button class="k-btn k-btn--icon" id="genCode" title="случайный код">⟳</button>
+          </div>
+        </div>
+        <button class="k-btn k-btn--primary k-btn--block" id="connectBtn">Подключиться</button>
+        <p class="netStatus" id="netStatus">Договоритесь об одном коде и нажмите «Подключиться» оба.</p>
+      </div>
+
+      <div class="k-card">
+        <div class="row"><span><i class="dot w"></i>Белые</span><b id="cntW">0</b></div>
+        <div class="row"><span><i class="dot b"></i>Чёрные</span><b id="cntB">0</b></div>
+        <div class="row"><span>В полёте</span><b id="cntMove">0</b></div>
+      </div>
+
+      <div class="k-card fld">
+        <div class="lblRow"><span>Время полёта</span><span id="ttLabel">10.0 c</span></div>
+        <input type="range" class="k-range" id="travel" min="1000" max="20000" step="500" value="10000">
+      </div>
+
+      <div class="k-card fld">
+        <div class="lblRow"><span>Максимум фигур в полёте</span><span id="flLabel">без ограничений</span></div>
+        <input type="range" class="k-range" id="flight" min="1" max="17" step="1" value="17">
+      </div>
+
+      <div class="k-card row aiSwitchRow" id="aiSwitch">
+        <span>ИИ играет за чёрных</span>
+        <label class="k-switch"><input type="checkbox" id="ai" checked><span class="k-switch__track"></span></label>
+      </div>
+
+      <div class="k-card aiCard" id="aiPanel">
+        <div class="aiHead">Настройки ИИ</div>
+        <div class="fld">
+          <div class="lblRow"><span>Агрессия (взятия)</span><span id="lCap">0.70</span></div>
+          <input type="range" class="k-range" id="aCap" min="0" max="1" step="0.05" value="0.7">
+        </div>
+        <div class="fld">
+          <div class="lblRow"><span>Снайпинг (перехват)</span><span id="lSnipe">0.60</span></div>
+          <input type="range" class="k-range" id="aSnipe" min="0" max="1" step="0.05" value="0.6">
+        </div>
+        <div class="fld">
+          <div class="lblRow"><span>Реакция короля</span><span id="lReact">1.0–3.0 c</span></div>
+          <div class="dual">
+            <input type="range" class="k-range" id="aReactMin" min="0" max="5" step="0.1" value="1">
+            <input type="range" class="k-range" id="aReactMax" min="0" max="5" step="0.1" value="3">
+          </div>
+        </div>
+        <div class="fld">
+          <div class="lblRow"><span>Темп ходов</span><span id="lMove">0.6–1.5 c</span></div>
+          <div class="dual">
+            <input type="range" class="k-range" id="aMoveMin" min="0.2" max="4" step="0.1" value="0.6">
+            <input type="range" class="k-range" id="aMoveMax" min="0.2" max="4" step="0.1" value="1.5">
+          </div>
+        </div>
+      </div>
+
+      <button class="k-btn k-btn--ghost k-btn--block" id="resetBtn">Новая партия</button>
+
+      <div class="k-accordion" id="rulesAcc" data-single>
+        <section class="k-accordion__item">
+          <button class="k-accordion__header" type="button">Правила</button>
+          <div class="k-accordion__body"><div class="k-accordion__inner rulesText">
+            <b>Как ходить.</b> Очередности нет. Кликни фигуру → клетку: она «летит» ~10 секунд. В полёте неуязвима и не бьёт; взятие происходит на финише.<br>
+            <b>Полёт.</b> Время фиксированное, не зависит от дистанции. В пути фигура неуязвима и не занимает клетку.<br>
+            <b>Лимит полёта.</b> «Максимум фигур в полёте» ограничивает, сколько своих фигур у каждой стороны может лететь одновременно.<br>
+            <b>Финиш.</b> Доехала на врага → взятие. Две вражеские на одну клетку → обе гибнут. Набег на свою занятую клетку → пришедший пропадает. Пешка на край → ферзь.<br>
+            <b>Цель.</b> Шахов и мата нет — побеждает тот, кто съел короля.
+          </div></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/js/kit.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/anyalink99/niokit@0.3.0/js/accordion.js"></script>
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>
