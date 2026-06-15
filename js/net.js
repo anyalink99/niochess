@@ -2,7 +2,7 @@ import { S, clamp } from './state.js';
 import { occMap, legalMoves, startMove } from './engine.js';
 import { startGame } from './game.js';
 
-const TRYSTERO = 'https://esm.sh/trystero/nostr';
+const TRYSTERO = 'https://esm.sh/trystero@0.25.2/nostr';
 const APP_ID = 'niochess-v1';
 
 function setStatus(msg, cls) {
@@ -112,14 +112,30 @@ export async function connect(code) {
   try {
     const { joinRoom, selfId } = mod;
     const room = joinRoom({ appId: APP_ID }, code);
-    const [sendMove, onMove] = room.makeAction('mv');
-    const [sendState, onState] = room.makeAction('st');
+    const moveAction = room.makeAction('mv');
+    const stateAction = room.makeAction('st');
 
-    S.net = { room, sendMove, sendState, selfId, peerId: null };
-    onMove(d => hostHandleMove(d));
-    onState(d => guestApply(d));
-    room.onPeerJoin(pid => peerJoin(pid));
-    room.onPeerLeave(() => peerLeave());
+    const safeSend = action => d => {
+      try {
+        const r = action.send(d);
+        if (r && r.catch) r.catch(() => {});
+      } catch (e) {
+        // ignore transient send failures
+      }
+    };
+
+    S.net = {
+      room,
+      selfId,
+      peerId: null,
+      sendMove: safeSend(moveAction),
+      sendState: safeSend(stateAction),
+    };
+
+    moveAction.onMessage = d => hostHandleMove(d);
+    stateAction.onMessage = d => guestApply(d);
+    room.onPeerJoin = pid => peerJoin(pid);
+    room.onPeerLeave = () => peerLeave();
 
     setStatus('Ожидание соперника… код: ' + code);
   } catch (e) {

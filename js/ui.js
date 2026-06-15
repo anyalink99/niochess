@@ -7,6 +7,30 @@ import { render, recalc, buildCells } from './render.js';
 
 const $ = id => document.getElementById(id);
 
+const LS_KEY = 'niochess:settings';
+const PERSIST = ['travel', 'flight', 'aCap', 'aSnipe', 'aReactMin', 'aReactMax', 'aMoveMin', 'aMoveMax'];
+
+function loadSettings() {
+  let data = {};
+  try {
+    data = JSON.parse(localStorage.getItem(LS_KEY)) || {};
+  } catch (e) {
+    data = {};
+  }
+  PERSIST.forEach(id => { if (data[id] != null) $(id).value = data[id]; });
+  if (typeof data.ai === 'boolean') $('ai').checked = data.ai;
+}
+
+function saveSettings() {
+  const data = { ai: $('ai').checked };
+  PERSIST.forEach(id => { data[id] = $(id).value; });
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+  } catch (e) {
+    // ignore
+  }
+}
+
 function canControl(p) {
   if (S.mode === 'local') return S.aiOn ? p.color === 'white' : true;
   if (S.mode === 'host') return p.color === 'white';
@@ -54,8 +78,8 @@ function syncTravel() {
 
 function syncFlight() {
   const v = +$('flight').value;
-  S.flightLimit = v >= 17 ? Infinity : v;
-  $('flLabel').textContent = v >= 17 ? 'без ограничений' : String(v);
+  S.flightLimit = v;
+  $('flLabel').textContent = String(v);
 }
 
 function bindAiPanel() {
@@ -113,6 +137,9 @@ function wireControls() {
   $('tabLocal').addEventListener('click', selectLocal);
   $('tabNet').addEventListener('click', selectNet);
   window.addEventListener('resize', recalc);
+
+  PERSIST.forEach(id => $(id).addEventListener('input', saveSettings));
+  $('ai').addEventListener('change', saveSettings);
 }
 
 function initAccordion() {
@@ -125,13 +152,16 @@ function initAccordion() {
 }
 
 function init() {
-  $('ai').checked = S.aiOn;
   buildCells(onCell);
   recalc();
-  wireControls();
+  loadSettings();
+  S.aiOn = $('ai').checked;
   syncTravel();
   syncFlight();
   bindAiPanel();
+  wireControls();
+  $('tabLocal').classList.add('is-on');
+  $('tabNet').classList.remove('is-on');
   showStart();
   initAccordion();
   requestAnimationFrame(loop);

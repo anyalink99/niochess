@@ -198,7 +198,7 @@ h1 em { font-style: italic; color: var(--accent); }
 
 .panel { width: 300px; display: flex; flex-direction: column; gap: 14px; }
 
-.k-segment {
+.seg {
   width: 100%;
   display: flex;
   gap: 4px;
@@ -208,12 +208,12 @@ h1 em { font-style: italic; color: var(--accent); }
   border-radius: 12px;
 }
 
-.k-segment__opt {
+.seg-opt {
   flex: 1;
   border: 0;
   background: transparent;
-  box-shadow: none;
   color: var(--muted);
+  font-family: inherit;
   font-weight: 600;
   font-size: 14px;
   padding: 9px;
@@ -222,8 +222,8 @@ h1 em { font-style: italic; color: var(--accent); }
   transition: .15s;
 }
 
-.k-segment__opt:hover { color: var(--ink); background: transparent; }
-.k-segment__opt.is-on { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.seg-opt:hover { color: var(--ink); }
+.seg-opt.is-on { background: var(--accent); color: var(--accent-ink); }
 
 .aiCard { display: flex; flex-direction: column; gap: 12px; }
 
