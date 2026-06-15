@@ -2,7 +2,7 @@
 
 Real-time chess with no turns. Pieces don't teleport — they **fly** from one square to another over a fixed time (~10 seconds by default, independent of distance). While a piece is in flight it is invulnerable and doesn't capture. The capture happens **on arrival**, when the piece lands. Whoever captures the king first wins.
 
-Play it: **https://anyalink99.github.io/niochess/**
+Play it: **https://niocreations.ru/niochess/**
 
 ## How to play
 
