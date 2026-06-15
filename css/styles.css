@@ -350,7 +350,7 @@ a { color: var(--accent); }
 .burger { display: none; }
 .scrim { display: none; }
 
-@media (max-width: 1080px) {
+@media (max-width: 1100px) {
   :root { --board: min(94vw, calc(100vh - 96px)); }
 
   html, body { overflow: hidden; height: 100%; }
