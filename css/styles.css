@@ -215,12 +215,28 @@ h1 em { font-style: italic; color: var(--accent); }
 #settings { display: flex; flex-direction: column; gap: 14px; }
 #aiGroup { display: flex; flex-direction: column; gap: 14px; }
 
-.collapsible { overflow: hidden; transition: max-height .3s var(--k-ease, ease), opacity .22s ease; }
-#settings.collapsible { max-height: 900px; }
-#netBox.collapsible { max-height: 280px; }
-#aiGroup.collapsible { max-height: 480px; }
-#surrenderBtn.collapsible { max-height: 60px; }
-.collapsed { max-height: 0 !important; opacity: 0; }
+.collapsible {
+  overflow: hidden;
+  transition: max-height .3s var(--k-ease, ease), opacity .22s ease,
+    margin .3s var(--k-ease, ease), padding .3s var(--k-ease, ease);
+}
+#settings.collapsible { max-height: 1200px; }
+#netBox.collapsible { max-height: 320px; }
+#aiGroup.collapsible { max-height: 560px; }
+#surrenderBtn.collapsible { max-height: 64px; }
+
+.collapsed {
+  max-height: 0 !important;
+  min-height: 0 !important;
+  margin-top: -7px !important;
+  margin-bottom: -7px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top-width: 0 !important;
+  border-bottom-width: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
 
 .seg {
   width: 100%;
