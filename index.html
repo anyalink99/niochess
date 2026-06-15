@@ -54,6 +54,7 @@
 </head>
 <body>
   <button class="burger" id="burger" aria-label="menu">☰</button>
+  <button class="gear" id="gear" aria-label="settings">⚙</button>
   <div class="scrim" id="scrim"></div>
 
   <header>
@@ -150,6 +151,31 @@
           <button class="k-accordion__header" type="button" data-i18n="rulesTitle">Rules</button>
           <div class="k-accordion__body"><div class="k-accordion__inner rulesText" id="rulesText"></div></div>
         </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span data-i18n="settings">Settings</span>
+        <button class="modal-x" id="modalClose" aria-label="close">✕</button>
+      </div>
+      <div class="k-card row optRow">
+        <span data-i18n="optBar">Piece progress bar</span>
+        <label class="k-switch"><input type="checkbox" id="optBar"><span class="k-switch__track"></span></label>
+      </div>
+      <div class="k-card row optRow">
+        <span data-i18n="optHints">Move highlights</span>
+        <label class="k-switch"><input type="checkbox" id="optHints"><span class="k-switch__track"></span></label>
+      </div>
+      <div class="k-card fld">
+        <span data-i18n="moveMethod">Move method</span>
+        <div class="seg" id="moveSeg">
+          <button class="seg-opt" data-mode="tap" data-i18n="moveTap">Tap</button>
+          <button class="seg-opt" data-mode="drag" data-i18n="moveDrag">Drag</button>
+          <button class="seg-opt" data-mode="both" data-i18n="moveBoth">Both</button>
+        </div>
       </div>
     </div>
   </div>

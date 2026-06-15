@@ -3,7 +3,7 @@ import { occMap, idleAt, legalMoves, startMove, resolveArrivals } from './engine
 import { aiTick } from './ai.js';
 import { connect, broadcast, leaveNet } from './net.js';
 import { startGame, showStart } from './game.js';
-import { render, recalc, buildCells } from './render.js';
+import { render, recalc, buildCells, resetPieceEls } from './render.js';
 import { T, applyI18n } from './i18n.js';
 
 const $ = id => document.getElementById(id);
@@ -21,16 +21,30 @@ function loadSettings() {
   }
   PERSIST.forEach(id => { if (data[id] != null) $(id).value = data[id]; });
   if (typeof data.ai === 'boolean') $('ai').checked = data.ai;
+  S.showBar = data.bar !== false;
+  S.showHints = data.hints !== false;
+  S.moveMode = data.mode || 'both';
+  $('optBar').checked = S.showBar;
+  $('optHints').checked = S.showHints;
+  applyMoveSeg();
 }
 
 function saveSettings() {
-  const data = { ai: $('ai').checked };
+  const data = { ai: $('ai').checked, bar: S.showBar, hints: S.showHints, mode: S.moveMode };
   PERSIST.forEach(id => { data[id] = $(id).value; });
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(data));
   } catch (e) {
   }
 }
+
+function applyMoveSeg() {
+  document.querySelectorAll('#moveSeg .seg-opt')
+    .forEach(b => b.classList.toggle('is-on', b.dataset.mode === S.moveMode));
+}
+
+function openModal() { $('modal').classList.add('open'); }
+function closeModal() { $('modal').classList.remove('open'); }
 
 function canControl(p) {
   if (S.mode === 'local') return S.aiOn ? p.color === 'white' : true;
@@ -73,7 +87,7 @@ function onPointerDown(e) {
     ? S.pieces.find(p => p.id === S.selectedId && p.state === 'idle')
     : null;
 
-  if (sel && legalMoves(sel, m).some(([F, R]) => F === f && R === r)) {
+  if (S.moveMode !== 'drag' && sel && legalMoves(sel, m).some(([F, R]) => F === f && R === r)) {
     doMove(sel, f, r);
     S.selectedId = null;
     return;
@@ -82,12 +96,14 @@ function onPointerDown(e) {
   const here = idleAt(f, r);
   if (here && canControl(here)) {
     S.selectedId = here.id;
-    drag = { id: here.id, moved: false };
-    S.dragTo = f + ',' + r;
-    setDragPos(e.clientX, e.clientY);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    if (S.moveMode !== 'tap') {
+      drag = { id: here.id, moved: false };
+      S.dragTo = f + ',' + r;
+      setDragPos(e.clientX, e.clientY);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    }
   } else {
     S.selectedId = null;
   }
@@ -238,6 +254,15 @@ function wireControls() {
   $('scrim').addEventListener('click', closeDrawer);
   frame.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('resize', recalc);
+
+  $('gear').addEventListener('click', openModal);
+  $('modalClose').addEventListener('click', closeModal);
+  $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  $('optBar').addEventListener('change', () => { S.showBar = $('optBar').checked; resetPieceEls(); saveSettings(); });
+  $('optHints').addEventListener('change', () => { S.showHints = $('optHints').checked; saveSettings(); });
+  document.querySelectorAll('#moveSeg .seg-opt').forEach(b =>
+    b.addEventListener('click', () => { S.moveMode = b.dataset.mode; applyMoveSeg(); saveSettings(); }));
 
   PERSIST.forEach(id => $(id).addEventListener('input', saveSettings));
   $('ai').addEventListener('change', saveSettings);

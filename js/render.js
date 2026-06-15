@@ -22,6 +22,11 @@ export function recalc() {
   S.SQ = frame.getBoundingClientRect().width / N;
 }
 
+export function resetPieceEls() {
+  for (const [, el] of els) el.remove();
+  els.clear();
+}
+
 export function buildCells() {
   grid.innerHTML = '';
   for (let r = 0; r < N; r++) {
@@ -73,7 +78,7 @@ export function render(now) {
     lastFlip = S.flip;
   }
 
-  const sel = S.selectedId != null
+  const sel = S.showHints && S.selectedId != null
     ? S.pieces.find(p => p.id === S.selectedId && p.state === 'idle')
     : null;
   const m = sel ? occMap() : null;
@@ -102,7 +107,7 @@ export function render(now) {
     let el = els.get(p.id);
     if (!el) {
       el = document.createElement('div');
-      el.innerHTML = '<span class="g"></span><span class="bar"><i></i></span>';
+      el.innerHTML = '<span class="g"></span>' + (S.showBar ? '<span class="bar"><i></i></span>' : '');
       el._g = el.querySelector('.g');
       el._bar = el.querySelector('.bar i');
       el._cls = el._glow = el._glyph = el._tf = el._bw = '';
@@ -131,8 +136,10 @@ export function render(now) {
       const t = clamp((now - p.start) / p.dur, 0, 1);
       x = lerp(p.fromFile, p.toFile, t) * S.SQ;
       y = lerp(p.fromRank, p.toRank, t) * S.SQ;
-      const sx = 'scaleX(' + t + ')';
-      if (sx !== el._bw) { el._bar.style.transform = sx; el._bw = sx; }
+      if (el._bar) {
+        const sx = 'scaleX(' + t + ')';
+        if (sx !== el._bw) { el._bar.style.transform = sx; el._bw = sx; }
+      }
     }
     const tf = `translate(${x}px, ${y}px)`;
     if (tf !== el._tf) { el.style.transform = tf; el._tf = tf; }
