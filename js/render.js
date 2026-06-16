@@ -92,6 +92,7 @@ function renderRate() {
   else if (status === 'rated') { msg = T.rateRated(S.rateValue); cls += ' ok'; }
   else if (status === 'rejected') { msg = T.rateRejected; cls += ' err'; }
   else if (status === 'nonick') msg = T.rateNoNick;
+  else if (status === 'samenick') { msg = T.rateSameNick; cls += ' err'; }
   else if (status === 'error') { msg = T.rateError; cls += ' err'; }
   bRate.textContent = msg;
   bRate.className = cls;

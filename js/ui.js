@@ -194,7 +194,9 @@ function maybeReport() {
   if (!rating.ratingEnabled() || S.reported || !S.matchId || !S.result) return;
   if (S.mode !== 'host' && S.mode !== 'guest') return;
   if (S.reportInFlight || performance.now() < S.reportRetryAt) return;
-  if (!rating.getNick()) { S.rateStatus = 'nonick'; return; }
+  const myNick = rating.getNick();
+  if (!myNick) { S.rateStatus = 'nonick'; return; }
+  if (S.oppNick && S.oppNick === myNick) { S.rateStatus = 'samenick'; return; }
   S.reportInFlight = true;
   S.rateStatus = 'sending';
   const mid = S.matchId;

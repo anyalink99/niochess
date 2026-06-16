@@ -163,7 +163,10 @@ export async function connect(code) {
     moveAction.onMessage = d => hostHandleMove(d);
     stateAction.onMessage = d => guestApply(d);
     surrAction.onMessage = () => hostHandleSurrender();
-    hiAction.onMessage = n => { S.oppNick = String(n || '').slice(0, 16); };
+    hiAction.onMessage = n => {
+      S.oppNick = String(n || '').slice(0, 16);
+      if (S.oppNick && S.oppNick === getNick()) setStatus(T.rateSameNick, 'err');
+    };
     room.onPeerJoin = pid => peerJoin(pid);
     room.onPeerLeave = () => peerLeave();
 
