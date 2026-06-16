@@ -5,3 +5,6 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+.wrangler/
+.dev.vars
+.env

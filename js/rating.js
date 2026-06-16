@@ -1,4 +1,4 @@
-const API_BASE = '';
+const API_BASE = 'https://niochess-api.anyalink99.workers.dev';
 const ID_KEY = 'niochess:id';
 
 export const ratingEnabled = () => !!API_BASE;

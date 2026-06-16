@@ -5,4 +5,4 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "niochess"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "9a9b0b89-b4f4-4341-9a60-8aaedd9738d7"
