@@ -177,6 +177,25 @@
           <button class="seg-opt" data-mode="both" data-i18n="moveBoth">Both</button>
         </div>
       </div>
+      <div class="k-card fld hidden" id="ratingBox">
+        <span data-i18n="nick">Nickname</span>
+        <div class="codeRow">
+          <input type="text" class="k-field" id="nickInput" maxlength="16" autocomplete="off" spellcheck="false">
+          <button class="k-btn k-btn--primary" id="nickSave" data-i18n="save">Save</button>
+        </div>
+        <p class="netStatus" id="nickStatus"></p>
+        <button class="k-btn k-btn--ghost k-btn--block" id="lbBtn" data-i18n="leaderboard">Leaderboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="lbModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <span data-i18n="leaderboard">Leaderboard</span>
+        <button class="modal-x" id="lbClose" aria-label="close">✕</button>
+      </div>
+      <div class="lbList" id="lbList"></div>
     </div>
   </div>
 

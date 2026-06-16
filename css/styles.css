@@ -432,6 +432,13 @@ a { color: var(--accent); }
 .optRow > span { color: var(--ink); }
 .optRow .k-switch { flex: 0 0 auto; }
 
+.lbList { display: flex; flex-direction: column; gap: 2px; max-height: 60vh; overflow-y: auto; }
+.lbRow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 14px; }
+.lbRow:nth-child(odd) { background: var(--bg2); }
+.lbRow .pos { width: 1.8em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lbRow .n { flex: 1; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lbRow .r { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+
 @media (max-width: 1200px) {
   :root { --board: min(100vw, 100dvh); }
 

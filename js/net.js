@@ -2,6 +2,7 @@ import { S, clamp } from './state.js';
 import { occMap, legalMoves, startMove } from './engine.js';
 import { startGame } from './game.js';
 import { T } from './i18n.js';
+import { getNick } from './rating.js';
 
 const TRYSTERO = 'https://esm.sh/trystero@0.25.2/nostr';
 const APP_ID = 'niochess-v1';
@@ -17,6 +18,7 @@ export function snapshot(now) {
     over: S.result,
     wy: S.overReason,
     cw: S.coordWhite,
+    mid: S.matchId,
     ps: S.pieces.map(p =>
       p.state === 'idle'
         ? { i: p.id, c: p.color, k: p.type, s: 0, f: p.file, r: p.rank }
@@ -50,6 +52,10 @@ function guestApply(d) {
   S.flip = S.myColor === 'black';
   S.result = d.over;
   S.overReason = d.wy || null;
+  if (d.mid && d.mid !== S.matchId) {
+    S.matchId = d.mid;
+    S.reported = false;
+  }
 }
 
 function hostHandleMove(d) {
@@ -73,6 +79,7 @@ function peerJoin(pid) {
   const host = S.net.selfId < pid;
   S.mode = host ? 'host' : 'guest';
   S.selectedId = null;
+  S.net.sendHi(getNick());
 
   if (host) {
     startGame();
@@ -128,6 +135,7 @@ export async function connect(code) {
     const moveAction = room.makeAction('mv');
     const stateAction = room.makeAction('st');
     const surrAction = room.makeAction('sr');
+    const hiAction = room.makeAction('hi');
 
     const safeSend = action => d => {
       try {
@@ -144,11 +152,13 @@ export async function connect(code) {
       sendMove: safeSend(moveAction),
       sendState: safeSend(stateAction),
       sendSurrender: safeSend(surrAction),
+      sendHi: safeSend(hiAction),
     };
 
     moveAction.onMessage = d => hostHandleMove(d);
     stateAction.onMessage = d => guestApply(d);
     surrAction.onMessage = () => hostHandleSurrender();
+    hiAction.onMessage = n => { S.oppNick = String(n || '').slice(0, 16); };
     room.onPeerJoin = pid => peerJoin(pid);
     room.onPeerLeave = () => peerLeave();
 

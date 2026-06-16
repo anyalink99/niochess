@@ -14,16 +14,19 @@ export function showStart() {
 export function startGame() {
   S.overReason = null;
   S.banner = null;
+  S.reported = false;
   if (S.mode === 'host') {
     S.coordWhite = S.coordWhite == null ? Math.random() < 0.5 : !S.coordWhite;
     S.myColor = S.coordWhite ? 'white' : 'black';
     S.flip = S.myColor === 'black';
+    S.matchId = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     setupBoard();
     S.started = true;
     broadcast(performance.now());
   } else {
     S.myColor = 'white';
     S.flip = false;
+    S.matchId = null;
     setupBoard();
     S.started = true;
     S.aiNextRandom = performance.now() + 800;

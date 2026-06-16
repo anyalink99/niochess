@@ -5,6 +5,7 @@ import { connect, broadcast, leaveNet } from './net.js';
 import { startGame, showStart } from './game.js';
 import { render, recalc, buildCells, resetPieceEls } from './render.js';
 import { T, applyI18n } from './i18n.js';
+import * as rating from './rating.js';
 
 const $ = id => document.getElementById(id);
 const frame = document.querySelector('.board-frame');
@@ -45,6 +46,43 @@ function applyMoveSeg() {
 
 function openModal() { $('modal').classList.add('open'); }
 function closeModal() { $('modal').classList.remove('open'); }
+function closeLb() { $('lbModal').classList.remove('open'); }
+
+function renderLeaderboard(rows) {
+  const list = $('lbList');
+  list.innerHTML = '';
+  if (!rows.length) { list.textContent = T.lbEmpty; return; }
+  rows.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'lbRow';
+    row.innerHTML = '<span class="pos"></span><span class="n"></span><span class="r"></span>';
+    row.querySelector('.pos').textContent = i + 1;
+    row.querySelector('.n').textContent = r.nick;
+    row.querySelector('.r').textContent = r.rating;
+    list.appendChild(row);
+  });
+}
+
+async function openLb() {
+  $('lbModal').classList.add('open');
+  renderLeaderboard([]);
+  renderLeaderboard(await rating.top(50));
+}
+
+function setupRating() {
+  if (!rating.ratingEnabled()) return;
+  $('ratingBox').classList.remove('hidden');
+  $('nickInput').value = rating.getNick();
+  $('nickSave').addEventListener('click', async () => {
+    const res = await rating.claim($('nickInput').value.trim());
+    const ok = res && res.ok;
+    $('nickStatus').textContent = ok ? '✓ ' + res.rating : (res && res.error) || 'error';
+    $('nickStatus').className = 'netStatus ' + (ok ? 'ok' : 'err');
+  });
+  $('lbBtn').addEventListener('click', openLb);
+  $('lbClose').addEventListener('click', closeLb);
+  $('lbModal').addEventListener('click', e => { if (e.target === $('lbModal')) closeLb(); });
+}
 
 function canControl(p) {
   if (S.mode === 'local') return S.aiOn ? p.color === 'white' : true;
@@ -148,7 +186,16 @@ function loop(now) {
   }
   render(now);
   syncPanel();
+  maybeReport();
   requestAnimationFrame(loop);
+}
+
+function maybeReport() {
+  if (!rating.ratingEnabled() || S.reported || !S.matchId || !S.result) return;
+  if (S.mode !== 'host' && S.mode !== 'guest') return;
+  S.reported = true;
+  const outcome = S.result === 'draw' ? 'draw' : (S.result === S.myColor ? 'win' : 'loss');
+  rating.report(S.matchId, outcome);
 }
 
 function syncTravel() {
@@ -258,7 +305,7 @@ function wireControls() {
   $('gear').addEventListener('click', openModal);
   $('modalClose').addEventListener('click', closeModal);
   $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
-  window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeLb(); } });
   $('optBar').addEventListener('change', () => { S.showBar = $('optBar').checked; resetPieceEls(); saveSettings(); });
   $('optHints').addEventListener('change', () => { S.showHints = $('optHints').checked; saveSettings(); });
   document.querySelectorAll('#moveSeg .seg-opt').forEach(b =>
@@ -287,6 +334,7 @@ function init() {
   syncFlight();
   bindAiPanel();
   wireControls();
+  setupRating();
   S.netTab = true;
   showStart();
   initAccordion();
