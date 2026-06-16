@@ -116,6 +116,12 @@ async function me(url, env) {
   return json({ nick: p.nick, rating: p.rating, wins: p.wins, losses: p.losses, draws: p.draws, games: p.games });
 }
 
+async function match(url, env) {
+  const m = await env.DB.prepare('SELECT status FROM matches WHERE id = ?')
+    .bind(url.searchParams.get('id') || '').first();
+  return json({ status: m ? m.status : 'none' });
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -125,6 +131,7 @@ export default {
       if (request.method === 'POST' && url.pathname === '/report') return await report(request, env);
       if (request.method === 'GET' && url.pathname === '/top') return await top(url, env);
       if (request.method === 'GET' && url.pathname === '/me') return await me(url, env);
+      if (request.method === 'GET' && url.pathname === '/match') return await match(url, env);
       return json({ error: 'not found' }, 404);
     } catch (e) {
       return json({ error: String((e && e.message) || e) }, 500);

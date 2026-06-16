@@ -193,9 +193,59 @@ function loop(now) {
 function maybeReport() {
   if (!rating.ratingEnabled() || S.reported || !S.matchId || !S.result) return;
   if (S.mode !== 'host' && S.mode !== 'guest') return;
-  S.reported = true;
+  if (S.reportInFlight || performance.now() < S.reportRetryAt) return;
+  if (!rating.getNick()) { S.rateStatus = 'nonick'; return; }
+  S.reportInFlight = true;
+  S.rateStatus = 'sending';
+  const mid = S.matchId;
   const outcome = S.result === 'draw' ? 'draw' : (S.result === S.myColor ? 'win' : 'loss');
-  rating.report(S.matchId, outcome);
+  rating.report(mid, outcome).then(res => {
+    S.reportInFlight = false;
+    if (S.matchId !== mid) return;
+    onReportResult(res, mid);
+  });
+}
+
+function onReportResult(res, mid) {
+  const st = res && res.status;
+  if (st === 'rated') {
+    S.reported = true;
+    S.rateStatus = 'rated';
+    S.rateValue = res.rating != null ? res.rating : null;
+  } else if (st === 'rejected') {
+    S.reported = true;
+    S.rateStatus = 'rejected';
+  } else if (st === 'pending' || st === 'already' || st === 'full') {
+    S.reported = true;
+    S.rateStatus = 'pending';
+    pollRated(mid, 0);
+  } else if (st === 'nonick') {
+    S.rateStatus = 'nonick';
+  } else {
+    S.reportTries += 1;
+    S.rateStatus = 'error';
+    if (S.reportTries < 3) S.reportRetryAt = performance.now() + 4000;
+    else S.reported = true;
+  }
+}
+
+function pollRated(mid, tries) {
+  if (tries >= 8 || S.matchId !== mid) return;
+  setTimeout(async () => {
+    if (S.matchId !== mid) return;
+    const ms = await rating.matchStatus(mid);
+    if (S.matchId !== mid) return;
+    if (ms && ms.status === 'rated') {
+      const meR = await rating.me();
+      if (S.matchId !== mid) return;
+      S.rateStatus = 'rated';
+      S.rateValue = meR && meR.rating != null ? meR.rating : null;
+    } else if (ms && ms.status === 'rejected') {
+      S.rateStatus = 'rejected';
+    } else {
+      pollRated(mid, tries + 1);
+    }
+  }, 2500);
 }
 
 function syncTravel() {

@@ -9,12 +9,19 @@ export function showStart() {
   S.overReason = null;
   S.flip = false;
   S.myColor = 'white';
+  S.rateStatus = null;
+  S.rateValue = null;
 }
 
 export function startGame() {
   S.overReason = null;
   S.banner = null;
   S.reported = false;
+  S.reportInFlight = false;
+  S.reportRetryAt = 0;
+  S.reportTries = 0;
+  S.rateStatus = null;
+  S.rateValue = null;
   if (S.mode === 'host') {
     S.coordWhite = S.coordWhite == null ? Math.random() < 0.5 : !S.coordWhite;
     S.myColor = S.coordWhite ? 'white' : 'black';

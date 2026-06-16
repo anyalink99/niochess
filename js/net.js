@@ -55,6 +55,11 @@ function guestApply(d) {
   if (d.mid && d.mid !== S.matchId) {
     S.matchId = d.mid;
     S.reported = false;
+    S.reportInFlight = false;
+    S.reportRetryAt = 0;
+    S.reportTries = 0;
+    S.rateStatus = null;
+    S.rateValue = null;
   }
 }
 

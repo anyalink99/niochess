@@ -8,6 +8,7 @@ const frame = document.querySelector('.board-frame');
 const bannerEl = document.getElementById('banner');
 const bTitle = document.getElementById('bTitle');
 const bSub = document.getElementById('bSub');
+const bRate = document.getElementById('bRate');
 const cntW = document.getElementById('cntW');
 const cntB = document.getElementById('cntB');
 const cntMove = document.getElementById('cntMove');
@@ -70,6 +71,30 @@ function renderOverlay() {
   bTitle.textContent = txt[0];
   bSub.textContent = txt[1];
   bannerEl.classList.add('show');
+}
+
+let shownRate;
+function renderRate() {
+  const net = S.mode === 'host' || S.mode === 'guest';
+  const status = S.result && net ? S.rateStatus : null;
+  const key = (status || '') + '|' + (S.rateValue == null ? '' : S.rateValue);
+  if (key === shownRate) return;
+  shownRate = key;
+  if (!status) {
+    bRate.textContent = '';
+    bRate.className = 'bRate';
+    return;
+  }
+  let msg = '';
+  let cls = 'bRate';
+  if (status === 'sending') msg = T.rateSending;
+  else if (status === 'pending') msg = T.ratePending;
+  else if (status === 'rated') { msg = T.rateRated(S.rateValue); cls += ' ok'; }
+  else if (status === 'rejected') { msg = T.rateRejected; cls += ' err'; }
+  else if (status === 'nonick') msg = T.rateNoNick;
+  else if (status === 'error') { msg = T.rateError; cls += ' err'; }
+  bRate.textContent = msg;
+  bRate.className = cls;
 }
 
 export function render(now) {
@@ -161,4 +186,5 @@ export function render(now) {
   }
 
   renderOverlay();
+  renderRate();
 }

@@ -218,6 +218,10 @@ h1 em { font-style: italic; color: var(--accent); }
 .banner.show { opacity: 1; visibility: visible; }
 .banner h3 { margin: 0 0 6px; font-family: "Fraunces", serif; font-size: clamp(24px, 4vw, 34px); }
 .banner p { margin: 0 0 18px; color: var(--muted); }
+.bRate { margin: -12px 0 18px; font-size: 13px; line-height: 1.4; color: var(--muted); max-width: 84%; }
+.bRate:empty { display: none; margin: 0; }
+.bRate.ok { color: var(--good); }
+.bRate.err { color: var(--bad); }
 
 .panel { width: 300px; display: flex; flex-direction: column; gap: 14px; }
 
